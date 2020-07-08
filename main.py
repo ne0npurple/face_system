@@ -110,8 +110,9 @@ def register_post():
         email = submit_form.email.data
         password = submit_form.password.data
 
-        vkey = random.random();
-        utils.send_email(email, "verify your account", str(vkey))
+        vkey = utils.password_hash(str(random.random()).encode('utf-8'))
+        utils.send_email(email, "verify your account",
+                "127.0.0.1:8080/verify?code=%s&worker_id=%s&type=admin" % (vkey, worker_id))
         databs().commit('''
         INSERT INTO `administrators` (`name`, `worker_id`, `email`, `password`, `vkey`, `verified`) VALUES (%s, %s, %s, %s, %s, '0');
         ''', [name, worker_id, email, utils.password_hash(password), vkey])
