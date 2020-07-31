@@ -109,13 +109,23 @@ def register_post():
         worker_id = submit_form.worker_id.data
         email = submit_form.email.data
         password = submit_form.password.data
+        account_type = submit_form.account_type.data
 
-        vkey = utils.password_hash(str(random.random()).encode('utf-8'))
+        if account_type == "students":
+            field = "(`name`, `student_id`, `email`, `password`, `vkey`, `gender`, `reg_time`, `class`, `verified`)"
+            value = "(%s, %s, %s, %s, %s, 'Unknow', NOW(), `Not Specified`, '0')"
+        elif account_type == "teachers":
+            field = "(`name`, `teacher_id`, `email`, `password`, `vkey`, `dept`, `reg_time`, `activated`)"
+            value = "(%s, %s, %s, %s, %s, 'Unknow', NOW(), '0')"
+        elif account_type == "administrators":
+            field="(`name`, `worker_id`, `email`, `password`, `vkey`, `verified`)"
+            value = "(%s, %s, %s, %s, %s, '0')"
+        vkey = utils.password_hash(str(random.random()))
         utils.send_email(email, "verify your account",
                 "127.0.0.1:8080/verify?code=%s&worker_id=%s&type=admin" % (vkey, worker_id))
-        databs().commit('''
-        INSERT INTO `administrators` (`name`, `worker_id`, `email`, `password`, `vkey`, `verified`) VALUES (%s, %s, %s, %s, %s, '0');
-        ''', [name, worker_id, email, utils.password_hash(password), vkey])
+        sql = "INSERT INTO `%s` %s VALUES %s;" % (account_type, field, value)
+        print(sql)
+        databs().commit(sql, [name, worker_id, email, utils.password_hash(password), vkey])
         return redirect('/')
     else:
         print(submit_form.name.errors)
@@ -123,7 +133,7 @@ def register_post():
         print(submit_form.email.errors)
         print(submit_form.password.errors)
         print(submit_form.errors.items())
-        return "error"
+        return "input error"
 
 @app.route("/assets/img/<path:path>", methods=["GET"])
 def send_img(path):
