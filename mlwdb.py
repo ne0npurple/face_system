@@ -20,7 +20,14 @@ class databs:
         self.static_connection = static_connection
         self.connection = self.static_connection.get_connection()
 
-    def raw_fetch(self, sql, params=None, retry=0):
+    def converter(self, obj):
+        if isinstance(obj, datetime):
+            return str(obj).replace('-', '/')
+
+    def fatch(self, sql, params=None):
+        return self.fetch(sql=sql, params=params)
+
+    def fetch(self, sql, params=None):
         try:
             with self.connection.cursor() as cursor:
                 if params is not None:
@@ -31,24 +38,6 @@ class databs:
         except OperationalError as oe:
             self.connection = self.static_connection.reconnect()
             raise oe
-
-    def converter(self, obj):
-        if isinstance(obj, datetime):
-            return str(obj).replace('-', '/')
-
-    def fatch(self, sql, params=None):
-        return self.fetch(sql=sql, params=params)
-
-    def fetch(self, sql, params=None):
-        if params:
-            raw_data = self.raw_fetch(sql=sql, params=params)
-        else:
-            raw_data = self.raw_fetch(sql=sql)
-        # Replace raw_data's datetime str from dash(-) to slash(/)
-        dumps_str = dumps(raw_data, default=self.converter)
-        # Convert to object again.
-        result = loads(dumps_str)
-        return result
 
     def commit(self, sql, params=None, retry=0):
         try:

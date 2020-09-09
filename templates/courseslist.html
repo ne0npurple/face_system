@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<script>
+    function show_model({ serial, course_id, day, time_start, time_end}) {
+        let modal = $("#modaledit");
+        modal.find("input[name=serial]").val(serial);
+        modal.find("select[name=course_id]").val(course_id);
+        modal.find("select[name=day]").val(day);
+        if(time_start.length !== 8) {
+            time_start = "0" + time_start;
+        }
+        modal.find("input[name=time_start]").val(time_start);
+        modal.find("input[name=time_end]").val(time_end);
+        modal.modal("show");
+    }
+</script>
+
+<div class="row">
+    <div class="col md-6">
+        <h5>All Courses Information</h5>
+        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Course Information</button>
+
+        {%with messages = get_flashed_messages()%}
+        {%if messages%}
+        {%for message in messages%}
+        <div class="alert alert-info alert-dismissable" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                <span aria-hidden="true">x</span>
+            </button>
+            {{message}}
+        </div>
+        
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
+
+        <table class="table table-striped">
+            <tr>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Day</th>
+                <th>Time Start</th>
+                <th>Time End</th>
+                <th>Action</th>
+            </tr>
+            {% for row in courses %}
+            <tr>
+                <td>{{row[2]}}</td>
+                <td>{{row[3]}}</td>
+                <td>{{row[4]}}</td>
+                <td>{{row[5]}}</td>
+                <td>{{row[6]}}</td>
+                <td>
+
+                    <a href="/updatecourseslist/{{row[0]}}" class="btn btn-warning btn-xs" 
+                    onclick="show_model({
+                        serial:'{{row[0]}}',
+                        day:'{{row[4]}}',
+                        time_start:'{{row[5]}}',
+                        time_end:'{{row[6]}}'
+                    })"
+                    data-toggle="modal">Edit</a>
+                    <a href="/deletecourseslist/{{row[0]}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<div id="mymodal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Please insert course information</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form action="courseslist" method="POST">
+                    <div class="form-group">
+                        <label>Course:</label>
+                        <select id="course_id" name="course_id"> 
+                            {% for course in courses: %}
+                            <option value="{{course[1]}}">{{course[2]}}({{course[3]}})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Day:</label>
+                        <select id="day" name="day">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Start:</label>
+                        <input type="time" class="form-control" name="time_start">
+                    </div>
+                    <div class="form-group">
+                        <label>Time End:</label>
+                        <input type="time" class="form-control" name="time_end">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Insert course information</button>
+                    </div> 
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div id="modaledit" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Please update course information</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form action="updatecourseslist" method="POST">
+                    <div class="form-group">
+                        <label>Course:</label>
+                        <input type="hidden" name="serial" value="">
+                        <select id="course_id" name="course_id" value=""> 
+                            {% for course in courses: %}
+                            <option value="{{course[1]}}">{{course[2]}}({{course[3]}})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Day:</label>
+                        <select id="day" name="day" value="">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Start:</label>
+                        <input type="time" class="form-control" id="time_start" name="time_start" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Time End:</label>
+                        <input type="time" class="form-control" id="time_end" name="time_end" value="">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Update course information</button>
+                    </div> 
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    h5 {
+        margin-top: 20px;
+        text-align: center;
+    }
+</style>
+
+{% endblock %}

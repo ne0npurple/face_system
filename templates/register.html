@@ -6,7 +6,7 @@
         if(document.getElementById("password").value === document.getElementById("password_conf").value) {
             return true;
         }
-        alert("password is not the same")
+        alert("Password is not the same")
         return false;
     }
 </script>
@@ -18,15 +18,26 @@
                     <div class="card-header">
                         <h4>Sign up</h4>
                     </div>
-                    <div class="imgcontainer">
+                    <br>
+                    <!-- <div class="imgcontainer">
                         <img class="imgavatar" src="assets/img/avatar.png">
+                    </div> -->
+
+                    {%with messages = get_flashed_messages()%}
+                    {%if messages%}
+                    {%for message in messages%}
+                    <div class="alert alert-info alert-dismissable" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                            <span aria-hidden="true">x</span>
+                        </button>
+                        {{message}}
                     </div>
+                    
+                    {%endfor%}
+                    {%endif%}
+                    {%endwith%}
 
                     <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        </div>
-                        <label>
                             <input type="radio" name="account_type" value="students" checked>
                             <span>Student</span>
                         </label>
@@ -51,7 +62,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input class="form-control" type="text" name="worker_id" placeholder="Worker ID" required>
+                        <input class="form-control" type="text" name="worker_id" placeholder="ID" required>
                     </div>
 
                     <div class="input-group form-group">
@@ -65,14 +76,14 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-key"></i></span>
                         </div>
-                        <input class="form-control" placeholder="Password" type="password" name="password" required id="password">
+                        <input class="form-control"  type="password" name="password" placeholder="Password" required id="password">
                     </div>
 
                     <div class="input-group form-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-key"></i></span>
                         </div>
-                        <input class="form-control" placeholder="Confirmation Password" type="password" name="password_conf" required id="password_conf">
+                        <input class="form-control" type="password" name="password_conf" placeholder="Confirmation Password" ssrequired id="password_conf">
                     </div>
 
 

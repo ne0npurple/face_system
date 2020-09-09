@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<div class="i-am-centered">
+    <div class="row row-cols-3">
+        <h5>Students Monitoring</h5>
+
+        <table class="table table-striped">
+            <tr>
+                <th>Student ID</th>
+                <th>Course Code</th>
+                <th>Time Arrive</th>
+            </tr>
+            {% for row in monitoring %}
+            <tr>
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
+                <td>{{row[2]}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<style>
+    .i-am-centered { 
+        margin: auto; 
+        max-width: 500px;
+    }
+
+    h5 {
+        margin: auto;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}

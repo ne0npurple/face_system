@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script>
+    function show_model({ teacher_id, name, email }) {
+        let modal = $("#modaledit");
+        modal.find("input[name=teacher_id]").val(teacher_id);
+        modal.find("input[name=name]").val(name);
+        modal.find("input[name=email]").val(email);
+        modal.modal("show");
+    }
+</script>
+
+<div class="container emp-profile">
+            <form method="GET">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="profile-head">
+                            <h4>Personal Information</h4>
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {%with messages = get_flashed_messages()%}
+                {%if messages%}
+                {%for message in messages%}
+                <div class="alert alert-info alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                        <span aria-hidden="true">x</span>
+                    </button>
+                    {{message}}
+                </div>
+                
+                {%endfor%}
+                {%endif%}
+                {%endwith%}
+   
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="tab-content profile-tab" id="myTabContent">
+                            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Identification Number</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p>{{profile[0]}}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Name</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p>{{profile[1]}}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Email</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p>{{profile[2]}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div>
+                <button type="button" href="/updateteachersprofile/{{profile[0]}}" class="btn btn-warning btn-xs" 
+                onclick="show_model({
+                    teacher_id:'{{profile[0]}}',
+                    name :'{{profile[1]}}',
+                    email:'{{profile[2]}}',
+                })"
+                data-toggle="modal">Edit Profile</button>
+            </div>
+
+</div>
+
+
+
+<div id="modaledit" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Please update profile</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form action="updateteachersprofile" method="POST">
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="hidden" name="teacher_id" value="">
+                        <input type="text" name="name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" class="form-control" name="email" value="">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Update Profile</button>
+                    </div> 
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+/* body{
+    background: -webkit-linear-gradient(left, #3931af, #00c6ff);
+} */
+
+.p {
+    font-size: 1em;
+}
+
+.container .emp-profile {
+    /* width: 75%; */
+    /* display: flex; */
+    /* justify-content: center;
+    align-items: center; */
+}
+
+.emp-profile{
+    padding: 3%;
+    margin-top: 3%;
+    margin-bottom: 3%;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.profile-head h5{
+    color: #333;
+}
+.profile-head h6{
+    color: #0062cc;
+}
+.profile-edit-btn{
+    border: none;
+    border-radius: 1.5rem;
+    width: 70%;
+    padding: 2%;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.profile-head .nav-tabs{
+    margin-bottom:5%;
+}
+
+.profile-head .nav-tabs .nav-link{
+    font-weight:600;
+    border: none;
+}
+
+.profile-head .nav-tabs .nav-link.active{
+    border: none;
+    border-bottom:2px solid #0062cc;
+}
+
+.profile-tab label{
+    font-weight: 600;
+}
+.profile-tab p{
+    font-weight: 600;
+    color: #0062cc;
+}
+</style>
+
+{% endblock %}

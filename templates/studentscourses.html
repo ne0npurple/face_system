@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<script>
+    function show_model({ serial, student_id, course_id}) {
+        let modal = $("#modaledit");
+        modal.find("input[name=serial]").val(serial);
+        modal.find("select[name=student_id]").val(student_id);
+        modal.find("select[name=course_id]").val(course_id);
+        modal.modal("show");
+    }
+</script>
+
+<div class="row">
+    <div class="col md-6">
+        <h5>Student's Courses Information</h5>
+        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Student's Course Information</button>
+
+        {%with messages = get_flashed_messages()%}
+        {%if messages%}
+        {%for message in messages%}
+        <div class="alert alert-info alert-dismissable" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                <span aria-hidden="true">x</span>
+            </button>
+            {{message}}
+        </div>
+        
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
+
+        <table class="table table-striped">
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Credit</th>
+                <th>Hours</th>
+                <th>Action</th>
+            </tr>
+            {% for row in courses %}
+            <tr>
+                <td>{{row[1]}}</td>
+                <td>{{row[2]}}</td>
+                <td>{{row[4]}}</td>
+                <td>{{row[5]}}</td>
+                <td>{{row[6]}}</td>
+                <td>{{row[7]}}</td>
+                <td>
+
+                    <a href="/updatestudentscourses/{{row[0]}}" class="btn btn-warning btn-xs" 
+                    onclick="show_model({
+                        serial :'{{row[0]}}',
+                        student_id :'{{row[1]}}',
+                        course_id:'{{row[3]}}'
+                    })"
+                    data-toggle="modal">Edit</a>
+                    <a href="/deletestudentscourses/{{row[0]}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<div id="mymodal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Please insert student's course information</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form action="studentscourses" method="POST">
+                    <div class="form-group">
+                        <label>Student:</label>
+                        <select id="student_id" name="student_id">
+                            {% for student in students:%}
+                            <option value="{{students[0]}}">{{students[1]}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Course:</label>
+                        <select id="course_id" name="course_id"> 
+                            {% for course in courses: %}
+                            <option value="{{course[3]}}">{{course[4]}}({{course[5]}})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Insert student's course information</button>
+                    </div> 
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div id="modaledit" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Please update student's course information</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form action="updatestudentscourses" method="POST">
+                    <div class="form-group">
+                        <label>Student:</label>
+                        <input type="hidden" name="serial" value="">
+                        <select id="student_id" name="student_id">
+                            {% for student in students:%}
+                            <option value="{{students[0]}}">{{students[1]}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Course:</label>
+                        <select id="course_id" name="course_id"> 
+                            {% for course in courses: %}
+                            <option value="{{course[3]}}">{{course[4]}}({{course[5]}})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Update student's course information</button>
+                    </div> 
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    h5 {
+        margin-top: 20px;
+        text-align: center;
+    }
+</style>
+
+{% endblock %}
