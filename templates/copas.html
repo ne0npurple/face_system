@@ -15,32 +15,24 @@
 <div class="i-am-centered">
     <div>
         <h5>Student's Courses Information</h5>
-    </div>
-
-    <div>
         <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Student's Courses</button>
     </div>
+    <div class="row row-cols-6">
 
-    <div class="srch">
-        <select class="form-control" id="select_student">
-        </select>
-        <button type="button" class="btnn" onclick="search()">Search</button>
-    </div>
+        {%with messages = get_flashed_messages()%}
+        {%if messages%}
+        {%for message in messages%}
+        <div class="alert alert-info alert-dismissable" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                <span aria-hidden="true">x</span>
+            </button>
+            {{message}}
+        </div>
+        
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
 
-    {%with messages = get_flashed_messages()%}
-    {%if messages%}
-    {%for message in messages%}
-    <div class="alert alert-info alert-dismissable" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="close">
-            <span aria-hidden="true">x</span>
-        </button>
-        {{message}}
-    </div>
-    {%endfor%}
-    {%endif%}
-    {%endwith%}
-
-    <div class="row row-cols-8">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -56,63 +48,32 @@
             <tbody id="tbody"> 
 
             </tbody>
+            
+            {% for row in studentcourses: %}
+            <tr>
+                <td>{{row[1]}}</td>
+                <td>{{row[2]}}</td>
+                <td>{{row[4]}}</td>
+                <td>{{row[5]}}</td>
+                <td>{{row[6]}}</td>
+                <td>{{row[7]}}</td>
+                <td>
+                    {% if usertype == administrators:%}
+                    <a href="/updatestudentscourses/{{row[0]}}" class="btn btn-warning btn-xs" 
+                    onclick="show_model({
+                        serial :'{{row[0]}}',
+                        student_id :'{{row[1]}}',
+                        course_id:'{{row[3]}}'
+                    })"
+                    data-toggle="modal">Edit</a>
+                    {% endif %}
+                    <a href="/deletestudentscourses/{{row[0]}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
         </table>
     </div>
 </div>
-
-<script>
-    let data = [
-        {% for row in studentcourses: %}
-        {
-            student_id: "{{row[1]}}",
-            name : "{{row[2]}}",
-            course_code : "{{row[4]}}",
-            course_name: "{{row[5]}}",
-            credit : "{{row[6]}}",
-            hours : "{{row[7]}}"
-        },
-        {% endfor %}
-    ];
-    function create_body(data) {
-        let tr = document.createElement("tr");
-        tr.innerHTML = `
-             <td>${data.student_id}</td>
-             <td>${data.name}</td>
-             <td>${data.course_code}</td>
-             <td>${data.course_name}</td>
-             <td>${data.credit}</td>
-             <td>${data.hours}</td>
-             `;
-        return tr;
-    }
-    let tbody = document.getElementById("tbody");
-    for(let d of data) {
-        tbody.appendChild(create_body(d))
-    }
-    let select_student = document.getElementById("select_student");
-    let select_map = {};
-    for(let d of data) {
-        select_map[d.student_id] = d.name;
-    }
-    for(let key in select_map) {
-        let val = select_map[key];
-        let option = document.createElement("option");
-        option.value = key;
-        option.innerText = `${val}(${key})`;
-        select_student.appendChild(option);
-    }
-
-    function search() {
-        let select_student = document.getElementById("select_student");
-        tbody.innerText="";
-        for(let d of data) {
-            if (d.student_id === select_student.value) {
-                tbody.appendChild(create_body(d))
-            }
-        }
-    }
-</script>
-
 
 <div id="mymodal" class="modal fade" role="dialog">
     <div class="modal-dialog">
@@ -206,29 +167,14 @@
         margin: auto; 
         margin-top: auto;
         margin-bottom: 20px;       
-        max-width: 100%;
+        max-width: 70%;
     }
 
     h5 {
         margin-top: 30px;
         margin-bottom: 20px;
         text-align: center;
-    }
-
-    .btnn {
-        background-color:#FFC312;
-        float: left;
-    }
-    
-    .btn {
-        float: left;
-        margin-bottom: 10px;
-    }
-
-    .table {
-        margin-top: 50px; 
-        }
-
+    }s
 </style>
 
 {% endblock %}

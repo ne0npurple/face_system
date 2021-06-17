@@ -241,6 +241,8 @@ def deletestudent(student_id):
 def teacherlist_get():
     if 'id' not in session:
         return redirect("/index")
+    if session['type'] == "students":
+        return redirect("index")
     teachers = databs().fetch("SELECT teacher_id, name, email, reg_time FROM teachers where state!=1")
     return utils.my_render_template("teachers.html", teachers = teachers)
 
@@ -248,6 +250,8 @@ def teacherlist_get():
 def teacherlist_post():
     if 'id' not in session:
         return redirect("/index")
+    if session['type'] == "students":
+        return redirect("index")
     submit_form = form.teacherlist()
     if submit_form.validate_on_submit():
         flash("Teacher Added Successfully")
@@ -270,6 +274,8 @@ def teacherlist_post():
 def updateteacherlist_get():
     if 'id' not in session:
         return redirect("/index")
+    if session['type'] == "students":
+        return redirect("index")
     teachers = databs().fetch("SELECT teacher_id, name, email, reg_time FROM teachers where state!=1")
     return utils.my_render_template("teachers.html", teachers = teachers)
 
@@ -277,6 +283,8 @@ def updateteacherlist_get():
 def updateteacherlist_post():
     if 'id' not in session:
         return redirect("/index")
+    if session['type'] == "students":
+        return redirect("index")
     submit_form = form.updateteacherlist()
     if submit_form.validate_on_submit():
         flash("Teacher Updated Successfully")
@@ -307,6 +315,8 @@ def deleteteacher(teacher_id):
 def courses_get():
     if 'id' not in session:
         return redirect("/index")
+    if session['type'] == "students":
+        return redirect("index")
     coursesname = databs().fetch("SELECT course_id, course_name, course_code, credit, hours FROM courses_code WHERE state!=1")
     return utils.my_render_template("courses.html", courses = coursesname)
 
@@ -370,97 +380,16 @@ def delete(course_id):
     databs().commit(sql, val)
     return redirect("/courses")
 
-@app.route("/courseslist", methods=["GET"])
-def courseslist_get():
-    if 'id' not in session:
-        return redirect("/index")
-    courses = databs().fetch("""SELECT serial,
-        courses_code.course_id, course_code, course_name, day, time_start, time_end
-    FROM
-        courses_code
-        INNER JOIN
-    courses_list ON courses_code.course_id = courses_list.course_id WHERE courses_code.state != 1""")
-
-    return utils.my_render_template("courseslist.html", courses=courses)
-
-@app.route("/courseslist", methods=["POST"])
-def courseslist_post():
-    if 'id' not in session:
-        return redirect("/index")
-    submit_form = form.courses_list()
-    if submit_form.validate_on_submit():
-        flash("Course Inserted Successfuly")
-        course_id = submit_form.course_id.data
-        teacher_id = submit_form.teacher_id.data
-        day = submit_form.day.data
-        time_start = submit_form.time_start.data
-        time_end = submit_form.time_end.data
-        sql = ('''INSERT INTO courses_list (course_id, teacher_id, day, time_start, time_end) VALUES (%s, %s, %s, %s, %s)''')
-        val = (course_id, teacher_id, day, time_start, time_end)
-        databs().commit(sql, val)
-        return redirect("/courseslist")
-    else:
-        print(submit_form.course_id.errors)
-        print(submit_form.teacher_id.errors)
-        print(submit_form.day.errors)
-        print(submit_form.time_start.errors)
-        print(submit_form.time_end.errors)
-        return "input error"
-
-@app.route("/updatecourseslist", methods=["GET"])
-def updatecourseslist_get():
-    if 'id' not in session:
-        return redirect("/index")
-    courses = databs().fetch("""SELECT 
-        serial, courses_code.course_id, teachers.teacher_id, course_code, course_name, teachers.name, day, time_start, time_end
-    FROM
-        courses_code
-        INNER JOIN
-    courses_list ON courses_code.course_id = courses_list.course_id
-        INNER JOIN
-    teachers ON teachers.teacher_id = courses_list.teacher_id where courses_code.state != 1""")
-    print(courses)
-    teacher = databs().fetch("SELECT teacher_id, name FROM teachers")
-    return utils.my_render_template("courseslist.html", courses=courses, teachers=teacher)
-
-@app.route("/updatecourseslist", methods=["POST"])
-def updatecourseslist_post():
-    if 'id' not in session:
-        return redirect("/index")
-    submit_form = form.updatecourseslist()
-    if submit_form.validate_on_submit():
-        flash("Course Information Updated Successfuly!")
-        serial = submit_form.serial.data
-        course_id = submit_form.course_id.data
-        teacher_id = submit_form.teacher_id.data
-        day = submit_form.day.data
-        time_start = submit_form.time_start.data
-        time_end = submit_form.time_end.data
-        sql = ('''UPDATE courses_list SET course_id=%s, teacher_id=%s, day=%s, time_start=%s, time_end=%s WHERE serial=%s''')
-        val = (course_id, teacher_id, day, time_start, time_end, serial)
-        databs().commit(sql, val)
-        return redirect("/courseslist")
-    else:
-        print(submit_form.course_id.errors)
-        print(submit_form.teacher_id.errors)
-        print(submit_form.day.errors)
-        print(submit_form.time_start.errors)
-        print(submit_form.time_end.errors)
-
-        return "Input error"
-
-@app.route("/deletecourseslist/<string:serial>", methods=["GET", "POST"])
-def deletecourseslist(serial):
-    flash("Course Information Deleted Successfuly")
-    sql = ('''DELETE FROM courses_list WHERE serial=%s''')
-    val = (serial) 
-    databs().commit(sql, val)
-    return redirect("/courseslist")
-
 @app.route("/studentscourses", methods=["GET"])
 def studentscourses_get():
     if 'id' not in session:
         return redirect("/index")
+    where = ""
+    arguments = []
+    if session['type'] == "students":
+        where = " and students.student_id = %s"
+        arguments = [ session['id'] ]
+    print(arguments)
     courses = databs().fetch("""SELECT serial, students.student_id, students.name,
         courses_code.course_id, course_code, course_name,  credit, hours
     FROM
@@ -468,10 +397,12 @@ def studentscourses_get():
         INNER JOIN
     students_courses ON courses_code.course_id = students_courses.course_id  
         INNER JOIN
-    students ON students.student_id = students_courses.student_id WHERE courses_code.state != 1""")
+    students ON students.student_id = students_courses.student_id WHERE courses_code.state != 1""" + where, arguments)
     print(courses)
     students = databs().fetch("SELECT student_id, name FROM students")
-    return utils.my_render_template("studentscourses.html", courses=courses, students=students)
+    teachers = databs().fetch("SELECT teacher_id, name FROM teachers")
+    listcourses = databs().fetch("SELECT course_id, course_code, course_name FROM courses_code")
+    return utils.my_render_template("studentscourses.html", studentcourses=courses, students=students, teachers=teachers, listcourses=listcourses)
 
 @app.route("/studentscourses", methods=["POST"])
 def studentscourses_post():
@@ -481,6 +412,8 @@ def studentscourses_post():
     if submit_form.validate_on_submit():
         flash("Data Added Successfuly")
         student_id = submit_form.student_id.data
+        if session['type'] == "students":
+            student_id = session['id']
         course_id = submit_form.course_id.data
         sql = ('''INSERT INTO students_courses (student_id, course_id) VALUES (%s, %s)''')
         val = (student_id, course_id)
@@ -505,7 +438,8 @@ def updatestudentscourses_get():
     students ON students.student_id = students_courses.student_id WHERE courses_code.state != 1""")
     print(courses)
     students = databs().fetch("SELECT student_id, name FROM students")
-    return utils.my_render_template("studentscourses.html", courses=courses, students=students)
+    listcourses = databs().fetch("SELECT course_id, course_code, course_name FROM courses_code")
+    return utils.my_render_template("studentscourses.html", students=students, listcourses=listcourses, studentcourses=courses)
 
 @app.route("/updatestudentscourses", methods=["POST"])
 def updatestudentscourses_post():
@@ -539,15 +473,15 @@ def teacherscourses_get():
     if 'id' not in session:
         return redirect("/index")
     courses = databs().fetch("""SELECT serial, teachers.teacher_id, teachers.name,
-        courses_code.course_id, course_code, course_name,  credit, hours
+        courses_code.course_id, course_code, course_name,  credit, hours, day, time_start, time_end
     FROM
         courses_code
         INNER JOIN
     teachers_courses ON courses_code.course_id = teachers_courses.course_id  
         INNER JOIN
     teachers ON teachers.teacher_id = teachers_courses.teacher_id WHERE courses_code.state != 1""")
-    print(courses)
     teachers = databs().fetch("SELECT teacher_id, name FROM teachers")
+    print(teachers)
     return utils.my_render_template("teacherscourses.html", courses=courses, teachers=teachers)
 
 @app.route("/teacherscourses", methods=["POST"])
@@ -559,13 +493,19 @@ def teacherscourses_post():
         flash("Data Added Successfuly")
         teacher_id = submit_form.teacher_id.data
         course_id = submit_form.course_id.data
-        sql = ('''INSERT INTO teachers_courses (teacher_id, course_id) VALUES (%s, %s)''')
-        val = (teacher_id, course_id)
+        day = submit_form.day.data
+        time_start = submit_form.time_start.data
+        time_end = submit_form.time_end.data
+        sql = ('''INSERT INTO teachers_courses (teacher_id, course_id, day, time_start, time_end) VALUES (%s, %s, %s, %s, %s)''')
+        val = (teacher_id, course_id, day, time_start, time_end)
         databs().commit(sql, val)
         return redirect("/teacherscourses")
     else:
         print(submit_form.teacher_id.errors)
         print(submit_form.course_id.errors)
+        print(submit_form.day.errors)
+        print(submit_form.time_start.errors)
+        print(submit_form.time_end.errors)
         return "input error"
 
 @app.route("/updateteacherscourses", methods=["GET"])
@@ -573,7 +513,7 @@ def updateteacherscourses_get():
     if 'id' not in session:
         return redirect("/index")
     courses = databs().fetch("""SELECT serial, teachers.teacher_id, teachers.name,
-        courses_code.course_id, course_code, course_name,  credit, hours
+        courses_code.course_id, course_code, course_name,  day, time_start, time_end
     FROM
         courses_code
         INNER JOIN
@@ -594,13 +534,19 @@ def updateteacherscourses_post():
         serial = submit_form.serial.data
         teacher_id = submit_form.teacher_id.data
         course_id = submit_form.course_id.data
-        sql = ('''UPDATE teachers_courses SET teacher_id=%s, course_id=%s WHERE serial=%s''')
-        val = (teacher_id, course_id, serial)
+        day = submit_form.day.data
+        time_start = submit_form.time_start.data
+        time_end = submit_form.time_end.data
+        sql = ('''UPDATE teachers_courses SET teacher_id=%s, course_id=%s, day=%s, time_start=%s, time_end=%s WHERE serial=%s''')
+        val = (teacher_id, course_id, day, time_start, time_end, serial)
         databs().commit(sql, val)
         return redirect("/teacherscourses")
     else:
         print(submit_form.teacher_id.errors)
         print(submit_form.course_id.errors)
+        rint(submit_form.day.errors)
+        print(submit_form.time_start.errors)
+        print(submit_form.time_end.errors)
         return "input error"
 
 @app.route("/deleteteacherscourses/<string:serial>", methods=["GET", "POST"])
@@ -615,7 +561,16 @@ def deleteteacherscourses(serial):
 def monitoringpage_get():
     if 'id' not in session:
         return redirect("/index")
-    monitoring = databs().fetch("SELECT student_id, course_code,time_arrive FROM students_monitoring where id")
+    where = ""
+    arguments = []
+    if session['type'] == "students":
+        where = " and student_id = %s"
+        arguments = [ session['id'] ]
+    monitoring = databs().fetch("""SELECT student_id, course_code, course_name, time_arrive
+    FROM 
+        students_monitoring
+        INNER JOIN
+    courses_code ON courses_code.course_id=students_monitoring.course_id""" + where, arguments)
     return utils.my_render_template("monitoringpage.html", monitoring = monitoring)
 
 @app.route("/register", methods=["GET"])
@@ -637,8 +592,8 @@ def register_post():
         password = submit_form.password.data
         account_type = submit_form.account_type.data
         if account_type == "students":
-            field = "(`name`, `student_id`, `email`, `password`, `vkey`, `gender`, `reg_time`, `grade`, `file`, `verified`)"
-            value = "(%s, %s, %s, %s, %s, 'Unknown', NOW(), 'Not Specified', 'Not Uploaded Yet', '0')"
+            field = "(`name`, `student_id`, `email`, `password`, `vkey`, `gender`, `reg_time`, `grade`, `verified`)"
+            value = "(%s, %s, %s, %s, %s, 'Unknown', NOW(), 'Not Specified', '0')"
         elif account_type == "teachers":
             field = "(`name`, `teacher_id`, `email`, `password`, `vkey`, `dept`, `reg_time`, `activated`)"
             value = "(%s, %s, %s, %s, %s, 'Unknown', NOW(), '0')"

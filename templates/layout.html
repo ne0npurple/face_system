@@ -31,34 +31,40 @@
     {% if id: %}
       <li><a href="#">Courses Informations</a>
         <ul>
-          <li><a href="/courseslist">All Courses</a></li>
-          <li><a href="/courses">List of Courses</a></li>
+          {% if usertype == "administrators": %}
+          <li><a href="/courses">Courses</a></li>
+          {% endif %}
+          <li><a href="/teacherscourses">Available Courses</a></li>      
         </ul>
       </li>
+      {% if usertype == "students" or usertype=="administrators": %}
       <li><a href="#">Students Information</a>
         <ul>
+          {% if usertype == "administrators": %}
           <li><a href="/studentlist">Students Personal Information</a></li>
-          <li><a href="/studentscourses">Students List Courses</a></li>
-          <li><a href="/monitoringpage">Students Monitoring</a></li>
+          {% endif %}
+          <li><a href="/studentscourses">Courses</a></li>
+          <li><a href="/monitoringpage">Monitoring</a></li>
 
         </ul>
       </li>
+      {% endif %}
+      {% if usertype == "administrators": %}
       <li><a href="#">Teachers Information</a>
         <ul>
           <li><a href="/teacherlist">Teachers Personal Information</a></li>
-          <li><a href="/teacherscourses">Teachers List Courses</a></li>
         </ul>
       </li>
-      
+      {% endif %}
       <li>
       <a href="#">
           <i class="fa fa-user"></i>
-          {{ name }}
+          {{ usertype }} : {{ name }}
           <i class="fa fa-chevron-down" style="font-size: .8em"></i>
       </a>
       <ul>
-          <li><a href="profile">Profile</a></li>
-          <li><a href="logout" class="logout">Logout</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/logout" class="logout">Logout</a></li>
       </ul>
     {% else: %}
     {% endif %}
@@ -189,6 +195,7 @@
 
   header ul li ul li a:hover {
       background: #507281;
+      /* color: #444; */
   }
 
   header ul li a {
@@ -260,11 +267,8 @@
   .input-group-prepend span {
     width: 50px;
     background-color: #FFC312;
-    /* color: black; */
     border: 0 !important;
   }
-
-
 
   input[type=text],
   input[type=password], input[type=email]  {
@@ -282,7 +286,6 @@
   }
 
   .loginbtn {
-    /* color: black; */
     background-color: #FFC312;
     width: 100%;
     height: 40px;

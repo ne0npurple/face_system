@@ -41,9 +41,12 @@ def password_hash(string):
 def my_render_template(*arg, **karg):
     name=None
     id=None
+    userType=None
     if 'username' in session:
         name=session['username']
     if 'id' in session:
         id=session['id']
-    return render_template(*arg, **karg, name=name, id=id)
+    if 'type' in session:
+        userType=session['type']
+    return render_template(*arg, **karg, name=name, id=id, usertype=userType)
 

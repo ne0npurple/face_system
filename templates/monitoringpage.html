@@ -3,37 +3,113 @@
 {% block main %}
 
 <div class="i-am-centered">
-    <div class="row row-cols-3">
+    <div>
         <h5>Students Monitoring</h5>
+    </div>
+    <div class="srch">
+        <select class="form-control" id="course_select">
+        </select>
+        <button class="btn" onclick="search()">Search</button>
+    </div>
 
+    <div class="row row-cols-4">
         <table class="table table-striped">
-            <tr>
-                <th>Student ID</th>
-                <th>Course Code</th>
-                <th>Time Arrive</th>
-            </tr>
-            {% for row in monitoring %}
-            <tr>
-                <td>{{row[0]}}</td>
-                <td>{{row[1]}}</td>
-                <td>{{row[2]}}</td>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Time Arrive</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+
+            </tbody>
         </table>
     </div>
 </div>
 
+<script>
+    let data = [
+        {% for row in monitoring: %}
+        {
+            student_id: "{{row[0]}}",
+            course_code: "{{row[1]}}",
+            course_name: "{{row[2]}}",
+            time_arrive: new Date("{{row[3]}}")
+        },
+        {% endfor %}
+    ];
+    function create_body(data) {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+             <td>${data.student_id}</td>
+             <td>${data.course_code}</td>
+             <td>${data.course_name}</td>
+             <td>${data.time_arrive.toLocaleString()}</td>
+        `;
+        return tr;
+    }
+    let tbody = document.getElementById("tbody");
+    for(let d of data) {
+        tbody.appendChild(create_body(d))
+    }
+    let course_select = document.getElementById("course_select");
+    let select_map = {};
+    for(let d of data) {
+        select_map[d.course_code] = d.course_name;
+    }
+    for(let key in select_map) {
+        let val = select_map[key];
+        let option = document.createElement("option");
+        option.value = key;
+        option.innerText = `${val}(${key})`;
+        course_select.appendChild(option);
+    }
+
+    function search() {
+        let course_select = document.getElementById("course_select");
+        tbody.innerText="";
+        for(let d of data) {
+            if (d.course_code === course_select.value) {
+                tbody.appendChild(create_body(d))
+            }
+        }
+    }
+</script>
+
 <style>
+
     .i-am-centered { 
         margin: auto; 
-        max-width: 500px;
+        margin-top: auto;
+        margin-bottom: 20px;       
+        max-width: 60%;
     }
 
     h5 {
-        margin: auto;
         margin-top: 30px;
         margin-bottom: 20px;
         text-align: center;
     }
+
+    .srch {
+        position: absolute;
+        float: left;
+    }
+
+    .btn {
+        background-color:#FFC312;
+        float: left;
+    }
+
+    .form-control {
+        float: left;
+    }
+
+    .table {
+        margin-top: 100px;    
+        }
+
 </style>
 {% endblock %}

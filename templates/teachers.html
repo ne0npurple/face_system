@@ -13,11 +13,13 @@
     }
 </script>
 
-<div class="row">
-    <div class="col md-12">
+<div class="i-am-centered">
+    <div>
         <h5>Teacher List</h5>
         <!-- <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Teacher</button> -->
-
+    </div>
+    <div class="row row-cols-4">
+        
         {%with messages = get_flashed_messages()%}
         {%if messages%}
         {%for message in messages%}
@@ -48,17 +50,14 @@
                 <td>{{row[3]}}</td>
 
                 <td>
-
-                    <!-- <a href="/updatestudentlist/{{row[0]}}" class="btn btn-warning btn-xs" 
+                    <a href="/updateteacherlist/{{row[0]}}" class="btn btn-warning btn-xs" 
                     onclick="show_model({
-                        student_id:'{{row[0]}}',
+                        teacher_id:'{{row[0]}}',
                         name :'{{row[1]}}',
-                        grade:'{{row[2]}}',
-                        gender:'{{row[3]}}',
-                        email:'{{row[4]}}',
-                        reg_time:'{{row[5]}}'
+                        email:'{{row[2]}}',
+                        reg_time:'{{row[3]}}'
                     })"
-                    data-toggle="modal">Edit</a> -->
+                    data-toggle="modal">Edit</a>
                     <a href="/deleteteacher/{{row[0]}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
                 </td>
             </tr>
@@ -104,7 +103,7 @@
 
         </div>
     </div>
-</div>
+</div> -->
 
 
 <div id="modaledit" class="modal fade" role="dialog">
@@ -143,11 +142,19 @@
             </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <style>
+    .i-am-centered { 
+        margin: auto; 
+        margin-top: auto;
+        margin-bottom: 20px;       
+        max-width: 60%;
+    }
+
     h5 {
-        margin-top: 20px;
+        margin-top: 30px;
+        margin-bottom: 20px;
         text-align: center;
     }
 </style>

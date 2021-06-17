@@ -3,19 +3,26 @@
 {% block main %}
 
 <script>
-    function show_model({ serial, teacher_id, course_id}) {
+    function show_model({ serial, teacher_id, course_id, day, time_start, time_end}) {
         let modal = $("#modaledit");
         modal.find("input[name=serial]").val(serial);
         modal.find("select[name=teacher_id]").val(teacher_id);
         modal.find("select[name=course_id]").val(course_id);
+        modal.find("select[name=day]").val(day);
+        modal.find("input[name=time_start]").val(time_start);
+        modal.find("input[name=time_end]").val(time_end);
         modal.modal("show");
     }
 </script>
 
-<div class="row">
-    <div class="col md-6">
-        <h5>Teacher's Courses Information</h5>
-        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Teacher's Course Information</button>
+<div class="i-am-centered">
+    <div>
+        <h5>Available Courses</h5>
+        {% if usertype == "administrators": %}
+        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Courses</button>
+        {% endif %}
+    </div>
+    <div class="row row-cols-6">
 
         {%with messages = get_flashed_messages()%}
         {%if messages%}
@@ -39,7 +46,12 @@
                 <th>Course Name</th>
                 <th>Credit</th>
                 <th>Hours</th>
+                <th>Day</th>
+                <th>Time Start</th>
+                <th>Time End</th>
+                {% if usertype == "administrators": %}
                 <th>Action</th>
+                {% endif %}
             </tr>
             {% for row in courses %}
             <tr>
@@ -49,17 +61,25 @@
                 <td>{{row[5]}}</td>
                 <td>{{row[6]}}</td>
                 <td>{{row[7]}}</td>
+                <td>{{row[8]}}</td>
+                <td>{{row[9]}}</td>
+                <td>{{row[10]}}</td>
+                {% if usertype == "administrators": %}
                 <td>
 
                     <a href="/updateteacherscourses/{{row[0]}}" class="btn btn-warning btn-xs" 
                     onclick="show_model({
                         serial : '{{row[0]}}',
-                        student_id :'{{row[1]}}',
-                        course_id:'{{row[3]}}'
+                        teacher_id :'{{row[1]}}',
+                        course_id:'{{row[3]}}',
+                        day:'{{row[6]}}',
+                        time_start:'{{row[7]}}',
+                        time_end:'{{row[8]}}'
                     })"
                     data-toggle="modal">Edit</a>
                     <a href="/deleteteacherscourses/{{row[0]}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
                 </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </table>
@@ -70,29 +90,47 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title">Please insert teacher's course information</h6>
+                <h6 class="modal-title">Please insert course</h6>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form action="teacherscourses" method="POST">
                     <div class="form-group">
                         <label>Teacher</label>
-                        <select id="teacher_id" name="teacher_id">
+                        <select class="form-control" id="teacher_id" name="teacher_id">
                             {% for teacher in teachers:%}
-                            <option value="{{teachers[0]}}">{{teachers[1]}}</option>
+                            <option value="{{teacher[0]}}">{{teacher[1]}}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Course:</label>
-                        <select id="course_id" name="course_id"> 
+                        <select class="form-control" id="course_id" name="course_id"> 
                             {% for course in courses: %}
                             <option value="{{course[3]}}">{{course[4]}}({{course[5]}})</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="submit">Insert teacher's course information</button>
+                        <label>Day:</label>
+                        <select class="form-control" id="day" name="day">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Start:</label>
+                        <input type="time" class="form-control" name="time_start">
+                    </div>
+                    <div class="form-group">
+                        <label>Time End:</label>
+                        <input type="time" class="form-control" name="time_end">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Insert course</button>
                     </div> 
                 </form>
             </div>
@@ -109,7 +147,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title">Please update teacher's course information</h6>
+                <h6 class="modal-title">Please update course</h6>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -117,22 +155,40 @@
                     <div class="form-group">
                         <label>Student:</label>
                         <input type="hidden" name="serial" value="">
-                        <select id="teacher_id" name="teacher_id">
+                        <select class="form-control" id="teacher_id" name="teacher_id">
                             {% for teacher in teachers:%}
-                            <option value="{{teachers[0]}}">{{teachers[1]}}</option>
+                            <option value="{{teacher[0]}}">{{teacher[1]}}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Course:</label>
-                        <select id="course_id" name="course_id"> 
+                        <select class="form-control" id="course_id" name="course_id"> 
                             {% for course in courses: %}
                             <option value="{{course[3]}}">{{course[4]}}({{course[5]}})</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="submit">Update teacher's course information</button>
+                        <label>Day:</label>
+                        <select class="form-control" id="day" name="day">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Start:</label>
+                        <input type="time" class="form-control" name="time_start">
+                    </div>
+                    <div class="form-group">
+                        <label>Time End:</label>
+                        <input type="time" class="form-control" name="time_end">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Update course</button>
                     </div> 
                 </form>
             </div>
@@ -146,8 +202,16 @@
 </div>
 
 <style>
+    .i-am-centered { 
+        margin: auto; 
+        margin-top: auto;
+        margin-bottom: 20px;       
+        max-width: 100%;
+    }
+
     h5 {
-        margin-top: 20px;
+        margin-top: 30px;
+        margin-bottom: 20px;
         text-align: center;
     }
 </style>

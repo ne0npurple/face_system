@@ -14,10 +14,12 @@
     }
 </script>
 
-<div class="row">
-    <div class="col md-6">
+<div class="i-am-centered">
+    <div>
         <h5>Courses List</h5>
         <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Course</button>
+    </div>
+    <div class="row row-cols-6">
 
         {%with messages = get_flashed_messages()%}
         {%if messages%}
@@ -146,8 +148,15 @@
 </div>
 
 <style>
+    .i-am-centered { 
+        margin: auto; 
+        margin-top: auto;
+        margin-bottom: 20px;       
+        max-width: 60%;
+    }
+
     h5 {
-        margin-top: 20px;
+        margin-top: 30px;
         margin-bottom: 20px;
         text-align: center;
     }
