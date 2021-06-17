@@ -627,4 +627,4 @@ def send_js(path):
 def send_css(path):
     return send_from_directory("./assets/css", path)
 
-app.run(port=8080, debug=True)
+app.run("0.0.0.0", port=8080, debug=True)

@@ -140,3 +140,4 @@ flask_session/
 *.swp
 
 credentials.json
+auth/token.pickle
