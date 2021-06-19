@@ -141,3 +141,4 @@ flask_session/
 
 credentials.json
 auth/token.pickle
+uploads

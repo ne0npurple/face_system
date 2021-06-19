@@ -3,16 +3,25 @@ import form
 import random
 import json
 import lib.common_functions as utils
+import imghdr
 
+from os.path import join, dirname, realpath
 from mlwdb import databs
 from flask_session import Session
-from flask import request, Flask, session, redirect, render_template, send_from_directory, flash
+from flask import request, Flask, session, redirect, render_template, send_from_directory, flash, url_for, abort, send_from_directory
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
 
 SESSION_TYPE = 'filesystem'
 app=Flask(__name__)
 app.secret_key = 'Df4:Vj Mm`L"iLV#|{"I!RY<2F+)L-wz.sm("&H_,\(1FpG{HJ^lH"E$qsDpz`$Omu,bwi#J\OB7:F:HR*~?Z*9U} Dr]5bHeZ~VrDm7Ro(TQGZaYbNsoT."[&/>>5%Q'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['WTF_CSRF_ENABLED'] = False
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+app.config['UPLOAD_PATH'] = UPLOAD_FOLDER
+app.config['UPLOAD_EXTENSIONS'] = ALLOWED_EXTENSIONS
 
 sess = Session()
 sess.init_app(app)
@@ -88,6 +97,49 @@ def verify():
                 print("ADASDSAD")
                 databs().commit(update_sql, request.args['worker_id'])
     return redirect("/")
+
+# ~~~~~UPLOAD IMAGE~~~~~~
+
+def validate_image(stream):
+    header = stream.read(512)
+    stream.seek(0) 
+    format = imghdr.what(None, header)
+    if not format:
+        return None
+    return '.' + format
+
+@app.errorhandler(413)
+def too_large(e):
+    return "File is too large", 413
+
+@app.route("/attendance", methods=["GET"])
+def attendance_get():
+    if 'id' not in session:
+        return redirect("/index")
+    files = []
+    if os.path.exists(os.path.join(app.config['UPLOAD_PATH'], session['id'])):
+        files = [session['id']]
+
+    return utils.my_render_template("recordattendance.html", files=files)
+
+@app.route("/attendance", methods=["POST"])
+def attendance_post():
+    if 'id' not in session:
+        return redirect("/index")
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in app.config['UPLOAD_EXTENSIONS'] or file_ext != validate_image(uploaded_file.stream):
+            abort(400)
+        uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], session["id"]))
+    return redirect("/attendance")
+
+@app.route('/uploads/<filename>')
+def upload(filename):
+    return send_from_directory(app.config['UPLOAD_PATH'], filename)
+
+# ~~~~~UPLOAD IMAGE~~~~~~
 
 @app.route("/profile", methods=["GET"])
 def profile_get():
