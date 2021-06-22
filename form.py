@@ -107,3 +107,7 @@ class updateadminsprofile(FlaskForm):
     worker_id = StringField("worker_id", validators=[InputRequired()])
     name = StringField("name", validators=[InputRequired()])
     email = StringField("email", validators=[InputRequired()])
+
+class insertattendance(FlaskForm):
+    student_id = StringField("student_id", validators=[InputRequired()])
+    course_id = IntegerField("course_id", validators=[InputRequired()])

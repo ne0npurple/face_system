@@ -34,7 +34,10 @@
           {% if usertype == "administrators": %}
           <li><a href="/courses">Courses</a></li>
           {% endif %}
-          <li><a href="/teacherscourses">Available Courses</a></li>      
+          <li><a href="/teacherscourses">Available Courses</a></li>
+          {% if usertype == "teachers": %}
+          <li><a href="/studentsattendance">Course Attendance</a></li>
+          {% endif %}       
         </ul>
       </li>
       {% if usertype == "students" or usertype=="administrators": %}
@@ -64,7 +67,8 @@
       </a>
       <ul>
           <li><a href="/profile">Profile</a></li>
-          <li><a href="/attendance">Attendance</a></li>
+          <!-- <li><a href="/recordattendance">Record Attendance</a></li> -->
+          <li><a href="/uploadimage">Upload Image</a></li>
           <li><a href="/logout" class="logout">Logout</a></li>
       </ul>
     {% else: %}

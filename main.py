@@ -112,18 +112,18 @@ def validate_image(stream):
 def too_large(e):
     return "File is too large", 413
 
-@app.route("/attendance", methods=["GET"])
-def attendance_get():
+@app.route("/uploadimage", methods=["GET"])
+def uploadimage_get():
     if 'id' not in session:
         return redirect("/index")
     files = []
     if os.path.exists(os.path.join(app.config['UPLOAD_PATH'], session['id'])):
         files = [session['id']]
 
-    return utils.my_render_template("recordattendance.html", files=files)
+    return utils.my_render_template("uploadimage.html", files=files)
 
-@app.route("/attendance", methods=["POST"])
-def attendance_post():
+@app.route("/uploadimage", methods=["POST"])
+def uploadimage_post():
     if 'id' not in session:
         return redirect("/index")
     uploaded_file = request.files['file']
@@ -133,7 +133,7 @@ def attendance_post():
         if file_ext not in app.config['UPLOAD_EXTENSIONS'] or file_ext != validate_image(uploaded_file.stream):
             abort(400)
         uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], session["id"]))
-    return redirect("/attendance")
+    return redirect("/uploadimage")
 
 @app.route('/uploads/<filename>')
 def upload(filename):
@@ -369,7 +369,7 @@ def courses_get():
         return redirect("/index")
     if session['type'] == "students":
         return redirect("index")
-    coursesname = databs().fetch("SELECT course_id, course_name, course_code, credit, hours FROM courses_code WHERE state!=1")
+    coursesname = databs().fetch("SELECT serial, course_name, course_code, credit, hours FROM courses_code WHERE state!=1")
     return utils.my_render_template("courses.html", courses = coursesname)
 
 @app.route("/courses", methods=["POST"])
@@ -398,7 +398,7 @@ def courses_post():
 def updatecourses_get():
     if 'id' not in session:
         return redirect("/index")
-    coursesname = databs().fetch("SELECT course_id, course_name, course_code, credit, hours FROM courses_code WHERE state!=1")
+    coursesname = databs().fetch("SELECT serial, course_name, course_code, credit, hours FROM courses_code WHERE state!=1")
     return utils.my_render_template("courses.html", courses = coursesname)
 
 @app.route("/updatecourses", methods=["POST"])
@@ -413,7 +413,7 @@ def updatecourses_post():
         course_code = submit_form.course_code.data
         credit = submit_form.credit.data
         hours = submit_form.hours.data
-        sql = ('''UPDATE courses_code SET course_name=%s, course_code=%s, credit=%s, hours=%s WHERE course_id=%s''')
+        sql = ('''UPDATE courses_code SET course_name=%s, course_code=%s, credit=%s, hours=%s WHERE serial=%s''')
         val = (course_name, course_code, credit, hours, course_id)
         databs().commit(sql, val)
         return redirect("/courses")
@@ -427,7 +427,7 @@ def updatecourses_post():
 @app.route("/delete/<string:course_id>", methods=["GET", "POST"])
 def delete(course_id):
     flash("Course Deleted Successfuly")
-    sql = ('''update courses_code set state=1 WHERE course_id=%s''')
+    sql = ('''update courses_code set state=1 WHERE serial=%s''')
     val = (course_id)
     databs().commit(sql, val)
     return redirect("/courses")
@@ -442,18 +442,18 @@ def studentscourses_get():
         where = " and students.student_id = %s"
         arguments = [ session['id'] ]
     print(arguments)
-    courses = databs().fetch("""SELECT serial, students.student_id, students.name,
-        courses_code.course_id, course_code, course_name,  credit, hours
+    courses = databs().fetch("""SELECT students_courses.serial, students.student_id, students.name,
+        courses_code.serial, course_code, course_name,  credit, hours
     FROM
-        courses_code
+        courses_code        
         INNER JOIN
-    students_courses ON courses_code.course_id = students_courses.course_id  
+    students_courses ON courses_code.serial = students_courses.course_id  
         INNER JOIN
     students ON students.student_id = students_courses.student_id WHERE courses_code.state != 1""" + where, arguments)
     print(courses)
     students = databs().fetch("SELECT student_id, name FROM students")
     teachers = databs().fetch("SELECT teacher_id, name FROM teachers")
-    listcourses = databs().fetch("SELECT course_id, course_code, course_name FROM courses_code")
+    listcourses = databs().fetch("SELECT serial, course_code, course_name FROM courses_code")
     return utils.my_render_template("studentscourses.html", studentcourses=courses, students=students, teachers=teachers, listcourses=listcourses)
 
 @app.route("/studentscourses", methods=["POST"])
@@ -481,11 +481,11 @@ def updatestudentscourses_get():
     if 'id' not in session:
         return redirect("/index")
     courses = databs().fetch("""SELECT serial, students.student_id, students.name,
-        courses_code.course_id, course_code, course_name,  credit, hours
+        courses_code.serial, course_code, course_name,  credit, hours
     FROM
         courses_code
         INNER JOIN
-    students_courses ON courses_code.course_id = students_courses.course_id  
+    students_courses ON courses_code.serial = students_courses.course_id  
         INNER JOIN
     students ON students.student_id = students_courses.student_id WHERE courses_code.state != 1""")
     print(courses)
@@ -520,18 +520,62 @@ def deletestudentscourses(serial):
     databs().commit(sql, val)
     return redirect("/studentscourses")
 
+# ~~~~~STUDENTS ATTENDANCE~~~~~~ 
+
+@app.route("/studentsattendance", methods=["GET"])
+def recordattendance_get():
+    if 'id' not in session or session['type'] != "teachers":
+        return redirect("/index")
+    if 'course_id' not in request.args:
+        courses = databs().fetch("""SELECT teachers_courses.serial, course_code, course_name
+            FROM
+            courses_code
+            INNER JOIN
+        teachers_courses ON courses_code.serial = teachers_courses.course_code_id WHERE courses_code.state != 1 and teachers_courses.teacher_id = %s""", [session['id']])
+        teachers = databs().fetch("SELECT teacher_id, name FROM teachers")
+        return utils.my_render_template("studentsattendance.html", courses=courses, teachers=teachers)
+    else:
+        students = databs().fetch("""SELECT students.student_id, name 
+        FROM 
+            students
+            INNER JOIN 
+        students_courses on students_courses.student_id = students.student_id WHERE course_id=%s""", [request.args["course_id"]])
+
+        studentlist = databs().fetch(""" SELECT students.student_id, name, time_arrive
+        FROM 
+            students
+            INNER JOIN
+        students_monitoring on students_monitoring.student_id = students.student_id WHERE course_id=%s""", [request.args["course_id"]])
+        return utils.my_render_template("recordattendance.html", students=students, studentlist=studentlist, course_id=request.args["course_id"])
+
+@app.route("/studentsattendance", methods=["POST"])
+def recordattendance_post():
+    if 'id' not in session or session['type'] != "teachers":
+        return redirect("/index")
+    submit_form = form.insertattendance()
+    if submit_form.validate_on_submit():
+        databs().commit('INSERT INTO students_monitoring(student_id, course_id, time_arrive) VALUES(%s, %s, NOW())', [submit_form.student_id.data, submit_form.course_id.data]) 
+    return redirect("/studentsattendance?course_id="+request.args["course_id"])
+
+# ~~~~~STUDENTS ATTENDANCE~~~~~~
+
 @app.route("/teacherscourses", methods=["GET"])
 def teacherscourses_get():
     if 'id' not in session:
         return redirect("/index")
-    courses = databs().fetch("""SELECT serial, teachers.teacher_id, teachers.name,
-        courses_code.course_id, course_code, course_name,  credit, hours, day, time_start, time_end
+    where = ""
+    arguments = []
+    if session['type'] == "teachers":
+        where = " and teachers.teacher_id = %s"
+        arguments = [ session['id'] ]
+    courses = databs().fetch("""SELECT teachers_courses.serial, teachers.teacher_id, teachers.name,
+        courses_code.serial, course_code, course_name,  credit, hours, day, time_start, time_end
     FROM
         courses_code
         INNER JOIN
-    teachers_courses ON courses_code.course_id = teachers_courses.course_id  
+    teachers_courses ON courses_code.serial = teachers_courses.course_code_id  
         INNER JOIN
-    teachers ON teachers.teacher_id = teachers_courses.teacher_id WHERE courses_code.state != 1""")
+    teachers ON teachers.teacher_id = teachers_courses.teacher_id WHERE courses_code.state != 1""" + where, arguments)
     teachers = databs().fetch("SELECT teacher_id, name FROM teachers")
     print(teachers)
     return utils.my_render_template("teacherscourses.html", courses=courses, teachers=teachers)
@@ -565,11 +609,11 @@ def updateteacherscourses_get():
     if 'id' not in session:
         return redirect("/index")
     courses = databs().fetch("""SELECT serial, teachers.teacher_id, teachers.name,
-        courses_code.course_id, course_code, course_name,  day, time_start, time_end
+        courses_code.serial, course_code, course_name,  day, time_start, time_end
     FROM
         courses_code
         INNER JOIN
-    teachers_courses ON courses_code.course_id = teachers_courses.course_id  
+    teachers_courses ON courses_code.serial = teachers_courses.course_code_id  
         INNER JOIN
     teachers ON teachers.teacher_id = teachers_courses.teacher_id WHERE courses_code.state != 1""")
     print(courses)
@@ -622,7 +666,7 @@ def monitoringpage_get():
     FROM 
         students_monitoring
         INNER JOIN
-    courses_code ON courses_code.course_id=students_monitoring.course_id""" + where, arguments)
+    courses_code ON courses_code.serial=students_monitoring.course_id""" + where, arguments)
     return utils.my_render_template("monitoringpage.html", monitoring = monitoring)
 
 @app.route("/register", methods=["GET"])
@@ -647,8 +691,8 @@ def register_post():
             field = "(`name`, `student_id`, `email`, `password`, `vkey`, `gender`, `reg_time`, `grade`, `verified`)"
             value = "(%s, %s, %s, %s, %s, 'Unknown', NOW(), 'Not Specified', '0')"
         elif account_type == "teachers":
-            field = "(`name`, `teacher_id`, `email`, `password`, `vkey`, `dept`, `reg_time`, `activated`)"
-            value = "(%s, %s, %s, %s, %s, 'Unknown', NOW(), '0')"
+            field = "(`name`, `teacher_id`, `email`, `password`, `vkey`, `reg_time`, `verified`, `state`)"
+            value = "(%s, %s, %s, %s, %s, NOW(), '0', '0')"
         elif account_type == "administrators":
             field="(`name`, `worker_id`, `email`, `password`, `vkey`, `verified`)"
             value = "(%s, %s, %s, %s, %s, '0')"

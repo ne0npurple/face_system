@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<div class="i-am-centered">
+    <div>
+        <h5>Course Attendance</h5>
+    </div>
+    <div class="srch">
+        <form method="GET">
+        <select class="form-control" id="course_select" name="course_id">
+            {% for row in courses: %}
+            <option value="{{row[0]}}">{{row[2]}}({{row[1]}})</option>
+            {% endfor %}
+        </select>
+            <button class="btn" type="submit">Start Attendance</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .i-am-centered {
+        margin: auto;
+        margin-top: auto;
+        margin-bottom: 20px;
+        max-width: 60%;
+    }
+
+    h5 {
+        margin-top: 30px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .srch {
+        position: absolute;
+        float: left;
+    }
+
+    .btn {
+        background-color: #FFC312;
+        float: left;
+    }
+
+    .form-control {
+        float: left;
+    }
+
+    .table {
+        margin-top: 100px;
+    }
+</style>
+{% endblock %}
