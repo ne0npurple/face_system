@@ -3,7 +3,7 @@
 {% block main %}
 
 <script>
-    function show_model({ serial, student_id, course_id}) {
+    function show_model({ serial, student_id, course_id }) {
         let modal = $("#modaledit");
         modal.find("input[name=serial]").val(serial);
         modal.find("select[name=student_id]").val(student_id);
@@ -18,7 +18,8 @@
     </div>
 
     <div>
-        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add Student's Courses</button>
+        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#mymodal">Add
+            Student's Courses</button>
     </div>
 
     <div class="srch">
@@ -53,7 +54,7 @@
                     <!-- <th>Action</th> -->
                 </tr>
             </thead>
-            <tbody id="tbody"> 
+            <tbody id="tbody">
 
             </tbody>
         </table>
@@ -63,15 +64,15 @@
 <script>
     let data = [
         {% for row in studentcourses: %}
-        {
-            student_id: "{{row[1]}}",
+    {
+        student_id: "{{row[1]}}",
             name : "{{row[2]}}",
-            course_code : "{{row[4]}}",
-            course_name: "{{row[5]}}",
-            credit : "{{row[6]}}",
-            hours : "{{row[7]}}"
-        },
-        {% endfor %}
+                course_code : "{{row[4]}}",
+                    course_name: "{{row[5]}}",
+                        credit : "{{row[6]}}",
+                            hours : "{{row[7]}}"
+    },
+    {% endfor %}
     ];
     function create_body(data) {
         let tr = document.createElement("tr");
@@ -86,15 +87,15 @@
         return tr;
     }
     let tbody = document.getElementById("tbody");
-    for(let d of data) {
+    for (let d of data) {
         tbody.appendChild(create_body(d))
     }
     let select_student = document.getElementById("select_student");
     let select_map = {};
-    for(let d of data) {
+    for (let d of data) {
         select_map[d.student_id] = d.name;
     }
-    for(let key in select_map) {
+    for (let key in select_map) {
         let val = select_map[key];
         let option = document.createElement("option");
         option.value = key;
@@ -104,8 +105,8 @@
 
     function search() {
         let select_student = document.getElementById("select_student");
-        tbody.innerText="";
-        for(let d of data) {
+        tbody.innerText = "";
+        for (let d of data) {
             if (d.student_id === select_student.value) {
                 tbody.appendChild(create_body(d))
             }
@@ -137,7 +138,7 @@
                     </div>
                     <div class="form-group">
                         <label>Course:</label>
-                        <select class="form-control" id="course_id" name="course_id"> 
+                        <select class="form-control" id="course_id" name="course_id">
                             {% for listcourse in listcourses: %}
                             <option value="{{listcourse[0]}}">{{listcourse[1]}}({{listcourse[2]}})</option>
                             {% endfor %}
@@ -145,7 +146,7 @@
                     </div>
                     <div class="form-group">
                         <button class="btn btn-primary" type="submit">Insert student's course</button>
-                    </div> 
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -181,7 +182,7 @@
                     </div>
                     <div class="form-group">
                         <label>Course:</label>
-                        <select class="form-control" id="course_id" name="course_id"> 
+                        <select class="form-control" id="course_id" name="course_id">
                             {% for listcourse in listcourses: %}
                             <option value="{{listcourse[0]}}">{{listcourse[1]}}({{listcourse[2]}})</option>
                             {% endfor %}
@@ -189,7 +190,7 @@
                     </div>
                     <div class="form-group">
                         <button class="btn btn-primary" type="submit">Update student's course</button>
-                    </div> 
+                    </div>
                 </form>
             </div>
 
@@ -202,10 +203,10 @@
 </div>
 
 <style>
-    .i-am-centered { 
-        margin: auto; 
+    .i-am-centered {
+        margin: auto;
         margin-top: auto;
-        margin-bottom: 20px;       
+        margin-bottom: 20px;
         max-width: 100%;
     }
 
@@ -216,19 +217,18 @@
     }
 
     .btnn {
-        background-color:#FFC312;
+        background-color: #FFC312;
         float: left;
     }
-    
+
     .btn {
         float: left;
         margin-bottom: 10px;
     }
 
     .table {
-        margin-top: 50px; 
-        }
-
+        margin-top: 50px;
+    }
 </style>
 
 {% endblock %}

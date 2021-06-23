@@ -515,8 +515,8 @@ def updatestudentscourses_post():
 @app.route("/deletestudentscourses/<string:serial>", methods=["GET", "POST"])
 def deletestudentscourses(serial):
     flash("Student's Course Information Deleted Successfuly")
-    sql = ('''DELETE FROM students_courses WHERE serial=%s''')
-    val = (serial) 
+    sql = '''DELETE FROM students_courses WHERE serial=%s'''
+    val = [serial] 
     databs().commit(sql, val)
     return redirect("/studentscourses")
 
@@ -558,6 +558,40 @@ def recordattendance_post():
     return redirect("/studentsattendance?course_id="+request.args["course_id"])
 
 # ~~~~~STUDENTS ATTENDANCE~~~~~~
+
+# ~~~~~ COURSES MONITORING FOR TEACHER ~~~~~~
+
+@app.route("/coursesmonitoring", methods=["GET"])
+def coursesmonitoring_get():
+    if 'id' not in session or session['type'] != "teachers":
+        return redirect("/index")
+    students = databs().fetch(""" SELECT students_monitoring.id, course_code, course_name, students.student_id, name, time_arrive
+    FROM 
+        students
+        INNER JOIN  
+    students_monitoring ON students.student_id = students_monitoring.student_id
+        INNER JOIN  
+    teachers_courses ON students_monitoring.course_id = teachers_courses.serial
+        INNER JOIN  
+    courses_code ON teachers_courses.course_code_id = courses_code.serial WHERE courses_code.state != 1 and teachers_courses.teacher_id= %s order by time_arrive desc """, [session['id']])
+
+    courses = databs().fetch(""" SELECT teachers.teacher_id, course_code, course_name 
+    FROM 
+        teachers
+        INNER JOIN 
+    teachers_courses ON teachers.teacher_id = teachers_courses.teacher_id
+        INNER JOIN 
+    courses_code ON teachers_courses.course_code_id = courses_code.serial where teachers_courses.teacher_id=%s""", [session['id']])
+    return utils.my_render_template("coursesmonitoring.html", students=students, courses=courses)
+
+@app.route("/deletecoursemonitoring", methods=["GET", "POST"])
+def deletecoursemonitoring():
+    id = request.args["id"]
+    flash("Monitoring History Deleted Successfuly!")
+    databs().commit(''' DELETE FROM students_monitoring WHERE id=%s''', [id] )
+    return redirect("/coursesmonitoring")
+
+# ~~~~~ COURSES MONITORING FOR TEACHER ~~~~~~
 
 @app.route("/teacherscourses", methods=["GET"])
 def teacherscourses_get():
