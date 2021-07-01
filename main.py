@@ -579,26 +579,32 @@ def recordattendance_post():
         return redirect("/index")
     uploaded_file = request.files['file']
     img = cv2.imdecode(np.fromstring(uploaded_file.read(), dtype='uint8'), cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     outputs = retinaFace.predict_img(img)
     if len(outputs) != 1:
         return "cannot detect face", 403
     predict = outputs[0]
     img = img[predict.y1:predict.y2, predict.x1:predict.x2]
-    cv2.imwrite("out.jpg", img)
-    m = tf.image.per_image_standardization(img)
-    imgList = [ tf.image.resize(m, (64,64)) ]
-    target = decode_model(np.array(imgList))[0]
 
-    for fpath in os.listdir(app.config['UPLOAD_PATH']):
-        data = cv2.imread(os.path.join(app.config['UPLOAD_PATH'], fpath))
-        imgList = [ tf.image.resize(tf.image.per_image_standardization(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), (64, 64))] 
-        data = decode_model(np.array(imgList))[0]
+    path_dataset = os.listdir(app.config['UPLOAD_PATH'])
 
-        app.logger.info(sum((data-target)*(data-target)))
-        if sum((data-target)*(data-target)) < 1:
-            student_id = fpath[:-4]
+    imgset = [ cv2.imread(os.path.join(app.config['UPLOAD_PATH'], fpath)) for fpath in path_dataset ] + [ img ]
+
+    processedset = [
+            tf.image.resize(
+                tf.image.per_image_standardization(
+                    cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                ), (64, 64)
+            ) for img in imgset
+        ]
+    del imgset
+    processedset = np.array(processedset)
+    result = decode_model(processedset)
+    dataset, target = result[:-1], result[-1]
+
+    for idx, data in enumerate(dataset):
+        if sum((target-data)**2) < 1:
+            student_id = path_dataset[idx][:-4]
             info = databs().fetch("""select students.name from teachers_courses inner join students_courses on students_courses.course_id=teachers_courses.serial inner join students on students.student_id=students_courses.student_id where students_courses.student_id=%s and teachers_courses.serial=%s """, [student_id, request.args["course_id"]])
             if len(info) == 0:
                 flash("this student is not in this class")
