@@ -46,7 +46,7 @@ def init_model():
     global decode_model
     global retinaFace
     retinaFace = RetinaFace("retinaface_tf2/configs/retinaface_res50.yaml")
-    decode_model = tf.keras.models.load_model("../models/triple-v13")
+    decode_model = tf.keras.models.load_model("./models")
     decode_model.summary()
     def encode_func(impaths: list):
         imgs = [ cv2.imread(path) for path in impaths ]
