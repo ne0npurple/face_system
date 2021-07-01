@@ -2,19 +2,35 @@
 
 {% block main %}
 
+    {%with messages = get_flashed_messages()%}
+    {%if messages%}
+    {%for message in messages%}
+    <div class="alert alert-info alert-dismissable" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="close">
+            <span aria-hidden="true">x</span>
+        </button>
+        {{message}}
+    </div>
+
+    {%endfor%}
+    {%endif%}
+    {%endwith%}
 <div class="i-am-centered">
     <div>
         <h5>Course Attendance</h5>
     </div>
-    <div class="srch">
-        <form method="POST">
-            <select class="form-control" name="student_id">
-                {% for row in students: %}
-                <option value="{{row[0]}}">{{row[1]}}({{row[0]}})</option>
-                {% endfor %}
-            </select>
-            <input name="course_id" value="{{course_id}}" type="hidden">
-            <button class="btn">Add Attendance</button>
+    <div>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="preview-container">
+                <img id="preview-img" src="#" alt="your image" />
+            </div>
+            <div>
+                <input type="file" name="file" accept="image/*" id="upload_image" />
+                <input name="course_id" value="{{course_id}}" type="hidden">
+            </div>
+            <div class="preview-container">
+                <button class="btn">Upload Picture</button>
+            </div>
         </form>
     </div>
     <div class="row row-cols-6">
@@ -36,13 +52,35 @@
 </div>
 
 
+<script>
+    preview = document.getElementById("preview-img");
+    input = document.getElementById("upload_image");
+    input.addEventListener("change", ()=> {
+        let reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    });
+</script>
 
 <style>
+    .preview-container {
+        display: flex;
+        justify-content: center;
+    }
+    .preview-container > #preview-img {
+        max-width: 50%;
+        max-height: 20%;
+    }
+
     .i-am-centered {
         margin: auto;
         margin-top: auto;
         margin-bottom: 20px;
         max-width: 60%;
+        display: flex;
+        flex-direction: column;
     }
 
     h5 {
@@ -66,7 +104,7 @@
     }
 
     .table {
-        margin-top: 100px;
+        margin-top: 20px;
     }
 </style>
 

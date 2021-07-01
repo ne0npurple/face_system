@@ -4,6 +4,9 @@ import random
 import json
 import lib.common_functions as utils
 import imghdr
+import cv2
+import numpy as np
+import tensorflow as tf
 
 from os.path import join, dirname, realpath
 from mlwdb import databs
@@ -25,6 +28,33 @@ app.config['UPLOAD_EXTENSIONS'] = ALLOWED_EXTENSIONS
 
 sess = Session()
 sess.init_app(app)
+
+encode_network = None
+decode_model = None
+retinaFace = None
+
+@app.before_first_request
+def init_model():
+    import tensorflow as tf
+    import cv2
+    import os
+    import cv2
+
+    from retinaface import RetinaFace
+    from tensorflow.compat.v1 import ConfigProto
+    from tensorflow.compat.v1 import InteractiveSession
+    global decode_model
+    global retinaFace
+    retinaFace = RetinaFace("retinaface_tf2/configs/retinaface_res50.yaml")
+    decode_model = tf.keras.models.load_model("../models/triple-v13")
+    decode_model.summary()
+    def encode_func(impaths: list):
+        imgs = [ cv2.imread(path) for path in impaths ]
+        outputs = [ retinaFace.predict_img(img) for img in imgs ]
+        region = [ img[predict[0].y1:predict[0].y2, predict[0].x1:predict[0].x2] for predict, img in zip(outputs, imgs) ]
+        return decode_model(np.array(region))
+    global encode_network
+    encode_network = encode_func
 
 @app.route("/", methods=["GET"])
 def main():
@@ -117,8 +147,8 @@ def uploadimage_get():
     if 'id' not in session:
         return redirect("/index")
     files = []
-    if os.path.exists(os.path.join(app.config['UPLOAD_PATH'], session['id'])):
-        files = [session['id']]
+    if os.path.exists(os.path.join(app.config['UPLOAD_PATH'], session['id']) + '.jpg'):
+        files = [session['id'] + '.jpg']
 
     return utils.my_render_template("uploadimage.html", files=files)
 
@@ -127,12 +157,13 @@ def uploadimage_post():
     if 'id' not in session:
         return redirect("/index")
     uploaded_file = request.files['file']
-    filename = secure_filename(uploaded_file.filename)
-    if filename != '':
-        file_ext = os.path.splitext(filename)[1]
-        if file_ext not in app.config['UPLOAD_EXTENSIONS'] or file_ext != validate_image(uploaded_file.stream):
-            abort(400)
-        uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], session["id"]))
+    img = cv2.imdecode(np.fromstring(uploaded_file.read(), dtype='uint8'), cv2.IMREAD_COLOR)
+    outputs = retinaFace.predict_img(img)
+    if len(outputs) != 1:
+        return "cannot detect face", 403
+    predict = outputs[0]
+    img = img[predict.y1:predict.y2, predict.x1:predict.x2]
+    cv2.imwrite(os.path.join(app.config['UPLOAD_PATH'], session["id"]) + '.jpg', img)
     return redirect("/uploadimage")
 
 @app.route('/uploads/<filename>')
@@ -535,26 +566,49 @@ def recordattendance_get():
         teachers = databs().fetch("SELECT teacher_id, name FROM teachers")
         return utils.my_render_template("studentsattendance.html", courses=courses, teachers=teachers)
     else:
-        students = databs().fetch("""SELECT students.student_id, name 
-        FROM 
-            students
-            INNER JOIN 
-        students_courses on students_courses.student_id = students.student_id WHERE course_id=%s""", [request.args["course_id"]])
-
         studentlist = databs().fetch(""" SELECT students.student_id, name, time_arrive
         FROM 
             students
             INNER JOIN
         students_monitoring on students_monitoring.student_id = students.student_id WHERE course_id=%s""", [request.args["course_id"]])
-        return utils.my_render_template("recordattendance.html", students=students, studentlist=studentlist, course_id=request.args["course_id"])
+        return utils.my_render_template("recordattendance.html", studentlist=studentlist, course_id=request.args["course_id"])
 
 @app.route("/studentsattendance", methods=["POST"])
 def recordattendance_post():
     if 'id' not in session or session['type'] != "teachers":
         return redirect("/index")
-    submit_form = form.insertattendance()
-    if submit_form.validate_on_submit():
-        databs().commit('INSERT INTO students_monitoring(student_id, course_id, time_arrive) VALUES(%s, %s, NOW())', [submit_form.student_id.data, submit_form.course_id.data]) 
+    uploaded_file = request.files['file']
+    img = cv2.imdecode(np.fromstring(uploaded_file.read(), dtype='uint8'), cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    outputs = retinaFace.predict_img(img)
+    if len(outputs) != 1:
+        return "cannot detect face", 403
+    predict = outputs[0]
+    img = img[predict.y1:predict.y2, predict.x1:predict.x2]
+    cv2.imwrite("out.jpg", img)
+    m = tf.image.per_image_standardization(img)
+    imgList = [ tf.image.resize(m, (64,64)) ]
+    target = decode_model(np.array(imgList))[0]
+
+    for fpath in os.listdir(app.config['UPLOAD_PATH']):
+        data = cv2.imread(os.path.join(app.config['UPLOAD_PATH'], fpath))
+        imgList = [ tf.image.resize(tf.image.per_image_standardization(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), (64, 64))] 
+        data = decode_model(np.array(imgList))[0]
+
+        app.logger.info(sum((data-target)*(data-target)))
+        if sum((data-target)*(data-target)) < 1:
+            student_id = fpath[:-4]
+            info = databs().fetch("""select students.name from teachers_courses inner join students_courses on students_courses.course_id=teachers_courses.serial inner join students on students.student_id=students_courses.student_id where students_courses.student_id=%s and teachers_courses.serial=%s """, [student_id, request.args["course_id"]])
+            if len(info) == 0:
+                flash("this student is not in this class")
+                return redirect("/studentsattendance?course_id="+request.args["course_id"])
+            else:
+                databs().commit("insert into students_monitoring (`student_id`, `course_id`, `time_arrive`) VALUES (%s, %s, NOW())", [student_id, request.args["course_id"]])
+                flash("student %s join the class" % info[0][0])
+                return redirect("/studentsattendance?course_id="+request.args["course_id"])
+
+    flash("no user found")
     return redirect("/studentsattendance?course_id="+request.args["course_id"])
 
 # ~~~~~STUDENTS ATTENDANCE~~~~~~

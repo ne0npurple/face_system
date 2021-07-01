@@ -12,7 +12,10 @@ if os.path.exists(token_file):
     with open(token_file, 'rb') as token:
         creds = pickle.load(token)
 
-service = build('gmail', 'v1', credentials=creds)
+if 'creds' in locals():
+    service = build('gmail', 'v1', credentials=creds)
+else:
+    print("warning: credict file not found")
 
 def send_email(to, subject, message_text):
   """Create a message for an email.
